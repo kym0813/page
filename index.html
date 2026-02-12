@@ -53,6 +53,17 @@
         }
         .add-area input { flex: 1; padding: 6px; }
         .add-area button { padding: 6px 10px; }
+        
+        .column_top .card-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .column_top .card-list .card {
+            width: calc(49% - 20px);
+        }
+        
     </style>
 </head>
 
@@ -60,8 +71,8 @@
 
 <h2>📋 공통 페이지 관리</h2>
 
-<div class="section column" data-owner="none">
-    <h3>공통 페이지</h3>
+<div class="section column column_top" data-owner="none">
+    <h3>공통 열어둔 페이지</h3>
     
     <div class="add-area">
         <input id="newCard" placeholder="페이지명 입력" />
