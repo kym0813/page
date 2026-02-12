@@ -10,9 +10,15 @@
             background: #f0f2f5;
             padding: 20px;
         }
-        h2, h3 { margin-bottom: 10px; }
         
-        .board { display: flex; gap: 20px; }
+        h2, h3 {
+            margin-bottom: 10px;
+        }
+        
+        .board {
+            display: flex;
+            gap: 20px;
+        }
         
         .section {
             background: #fff;
@@ -22,7 +28,9 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
         
-        .card-list { min-height: 150px; }
+        .card-list {
+            min-height: 150px;
+        }
         
         .card {
             background: #f7f7f7;
@@ -35,15 +43,20 @@
             align-items: center;
         }
         
-        .card.dragging { opacity: .4; }
-        
-        .card span { flex: 1; }
+        .card span {
+            flex: 1;
+        }
         
         .card button {
             background: none;
             border: none;
             cursor: pointer;
+            font-size: 14px;
             color: #d00;
+        }
+        
+        .card:active {
+            cursor: grabbing;
         }
         
         .add-area {
@@ -51,8 +64,15 @@
             gap: 6px;
             margin-bottom: 10px;
         }
-        .add-area input { flex: 1; padding: 6px; }
-        .add-area button { padding: 6px 10px; }
+        
+        .add-area input {
+            flex: 1;
+            padding: 6px;
+        }
+        
+        .add-area button {
+            padding: 6px 10px;
+        }
     </style>
 </head>
 
@@ -60,16 +80,17 @@
 
 <h2>📋 공통 페이지 관리</h2>
 
+<!-- 공통 카드 관리 -->
 <div class="section column" data-owner="none">
-    <h3>공통 사용중 페이지</h3>
+    <h3>공통 페이지</h3>
     
     <div class="add-area">
         <input id="newCard" placeholder="페이지명 입력" />
         <button id="addBtn">추가</button>
     </div>
     
-    <div class="card-list" id="commonList"></div>
-</div>
+    <div class="card-list"></div>
+</div>Q
 
 <br />
 
@@ -89,7 +110,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
     
-    /* Firebase */
     const firebaseConfig = {
         apiKey: "AIzaSyAoWvIy1Dy9bgRzXDnmSmZGWg1ZeDdZins",
         authDomain: "schedule-8a57f.firebaseapp.com",
@@ -104,9 +124,7 @@
     const db = getDatabase(app);
     const cardsRef = ref(db, "cards");
     
-    let dragId = null;
-    
-    /* 카드 추가 */
+    /* 카드 추가 (공통) */
     document.getElementById("addBtn").onclick = () => {
         const input = document.getElementById("newCard");
         if (!input.value.trim()) return;
@@ -114,108 +132,69 @@
         push(cardsRef, {
             title: input.value,
             owner: "none",
-            order: Date.now(),
             createdAt: Date.now()
         });
         
         input.value = "";
     };
     
-    /* 렌더링 */
-    onValue(cardsRef, snap => {
+    /* 카드 렌더링 */
+    onValue(cardsRef, snapshot => {
         document.querySelectorAll(".card-list").forEach(el => el.innerHTML = "");
-        const data = snap.val();
-        if (!data) return;
         
-        const sorted = Object.entries(data)
-            .sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+        const cards = snapshot.val();
+        if (!cards) return;
         
-        sorted.forEach(([id, card]) => {
-            const el = document.createElement("div");
-            el.className = "card";
-            el.draggable = true;
-            el.dataset.id = id;
-            el.dataset.owner = card.owner;
+        Object.entries(cards).forEach(([id, card]) => {
+            const cardEl = document.createElement("div");
+            cardEl.className = "card";
+            cardEl.draggable = true;
+            cardEl.dataset.id = id;
             
-            el.innerHTML = `<span>${card.title}</span>`;
+            const title = document.createElement("span");
+            title.textContent = card.title;
             
+            cardEl.appendChild(title);
+            
+            /* ❌ 삭제 버튼 (공통 카드에서만) */
             if (card.owner === "none") {
-                const del = document.createElement("button");
-                del.textContent = "❌";
-                del.onclick = e => {
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "❌";
+                
+                delBtn.onclick = e => {
                     e.stopPropagation();
-                    if (confirm("삭제할까요?")) {
+                    if (confirm("이 페이지를 완전히 삭제할까요?")) {
                         remove(ref(db, `cards/${id}`));
                     }
                 };
-                el.appendChild(del);
+                
+                cardEl.appendChild(delBtn);
             }
             
-            el.addEventListener("dragstart", () => {
-                dragId = id;
-                el.classList.add("dragging");
-            });
-            
-            el.addEventListener("dragend", () => {
-                dragId = null;
-                el.classList.remove("dragging");
+            cardEl.addEventListener("dragstart", e => {
+                e.dataTransfer.setData("cardId", id);
             });
             
             document
                 .querySelector(`.column[data-owner="${card.owner}"] .card-list`)
-                ?.appendChild(el);
+                ?.appendChild(cardEl);
         });
     });
     
-    /* 공통 페이지 순서 변경 */
-    const commonList = document.getElementById("commonList");
-    
-    commonList.addEventListener("dragover", e => {
-        e.preventDefault();
-        const after = getAfter(commonList, e.clientY);
-        const dragging = document.querySelector(".dragging");
-        if (!dragging) return;
+    /* 드래그 이동 */
+    document.querySelectorAll(".column").forEach(column => {
+        column.addEventListener("dragover", e => e.preventDefault());
         
-        if (!after) commonList.appendChild(dragging);
-        else commonList.insertBefore(dragging, after);
-    });
-    
-    commonList.addEventListener("drop", () => {
-        [...commonList.children].forEach((card, i) => {
-            update(ref(db, `cards/${card.dataset.id}`), {
-                owner: "none",
-                order: i
-            });
-        });
-    });
-    
-    /* 담당자 이동 */
-    document.querySelectorAll(".column").forEach(col => {
-        if (col.dataset.owner === "none") return;
-        
-        col.addEventListener("dragover", e => e.preventDefault());
-        col.addEventListener("drop", e => {
+        column.addEventListener("drop", e => {
             e.preventDefault();
-            if (!dragId) return;
+            const cardId = e.dataTransfer.getData("cardId");
+            const newOwner = column.dataset.owner;
             
-            update(ref(db, `cards/${dragId}`), {
-                owner: col.dataset.owner,
-                order: Date.now()
+            update(ref(db, `cards/${cardId}`), {
+                owner: newOwner
             });
         });
     });
-    
-    /* 위치 계산 */
-    function getAfter(container, y) {
-        return [...container.querySelectorAll(".card:not(.dragging)")]
-            .reduce((closest, el) => {
-                const box = el.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                return offset < 0 && offset > closest.offset
-                    ? { offset, el }
-                    : closest;
-            }, { offset: Number.NEGATIVE_INFINITY }).el;
-    }
 </script>
 
 </body>
