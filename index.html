@@ -12,7 +12,7 @@
         }
         h2, h3 { margin-bottom: 10px; }
         
-        .board { display: flex; gap: 20px; }
+        .board { display: flex; gap: 20px; font-size: 12px;}
         
         .section {
             background: #fff;
@@ -33,6 +33,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 40px;
+            box-sizing: border-box;
         }
         
         .card.dragging { opacity: .4; }
@@ -55,18 +57,30 @@
         .add-area button { padding: 6px 10px; }
         
         .column_top {
-            width: 600px;Œ
+            width: auto;
+            font-size: 12px;
         }
         .column_top .card-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            overflow-y: auto;
+            height: 200px;
         }
         
         .column_top .card-list .card {
-            width: calc(49% - 20px);
+            margin: 0;
         }
         
+        
+        .board .card-list {
+            overflow-y: auto;
+            height: 200px;
+        }
+        
+        .board .card-list .card {
+            background: #ffb951;
+        }
     </style>
 </head>
 
