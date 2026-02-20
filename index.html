@@ -25,7 +25,6 @@
         .card-list { min-height: 150px; }
         
         .card {
-            background: #ffb951;
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 8px;
@@ -36,6 +35,10 @@
             height: 40px;
             box-sizing: border-box;
             gap: 6px;
+        }
+        
+        .board .card {
+            background: #ffb951;
         }
         
         .card.dragging { opacity: .4; }
@@ -62,12 +65,12 @@
         .add-area input { flex: 1; padding: 6px; }
         .add-area button { padding: 6px 10px; }
         
-        .column_top { width: auto; font-size: 12px; }
+        .column_top { width: auto; font-size: 11px; }
         
         .column_top .card-list {
             gap: 5px;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             overflow-y: auto;
             height: 200px;
         }
@@ -83,7 +86,7 @@
         .device-area {
             display: flex;
             gap: 4px;
-            font-size: 11px;
+            font-size: 8px;
             align-items: center;
         }
         
